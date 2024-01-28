@@ -1,0 +1,41 @@
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from xgboost import XGBClassifier
+from sklearn.metrics import accuracy_score
+import matplotlib.pyplot as plt
+from xgboost import plot_tree
+
+# Load the dataset into a Pandas DataFrame
+dataset_path = 'dataset/food.csv'
+df = pd.read_csv(dataset_path)
+
+# Clean up column names
+df.columns = df.columns.str.strip()
+
+# Assuming 'TargetClass' is your categorical target variable
+X = df.drop(['Data.Kilocalories', 'Description', 'Nutrient Data Bank Number'], axis=1)
+y = df['Description']
+
+# Use pd.factorize to convert string labels into numerical format
+y_encoded, class_labels = pd.factorize(y)
+
+# Split the data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y_encoded, test_size=0.2, random_state=42)
+
+# Initialize XGBoost Classifier with some hyperparameters
+xgb_classifier = XGBClassifier(learning_rate=0.1, max_depth=3, n_estimators=100, random_state=42)
+
+# Fit the model
+xgb_classifier.fit(X_train, y_train)
+
+# Make predictions
+y_pred = xgb_classifier.predict(X_test)
+
+# Evaluate the model
+accuracy = accuracy_score(y_test, y_pred)
+print('Accuracy:', accuracy)
+
+# Plot the first tree in the ensemble
+plt.figure(figsize=(15, 10))
+plot_tree(xgb_classifier, num_trees=0, rankdir='LR', feature_names=X.columns, filled=True, rounded=True)
+plt.show()
